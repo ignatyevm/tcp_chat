@@ -11,12 +11,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import polyndrom.tcp_chat.server.request.CreateChatRequest;
 
 public class CreateChatScene extends Scene {
 
     public CreateChatScene(Group root) {
         super(root, TcpChatMain.WINDOW_WIDTH, TcpChatMain.WINDOW_HEIGHT);
+
+        Label label = new Label("Create chat");
+        label.setFont(new Font(20));
 
         TextField inputChatName = new TextField();
         inputChatName.setPromptText("Type chat name...");
@@ -31,7 +35,11 @@ public class CreateChatScene extends Scene {
         Button backButton = new Button("Back");
         backButton.setOnAction(event -> InitialScene.show());
 
-        VBox mainContainer = new VBox(inputChatName, inputUserName, inputChatPassword, createButton);
+        HBox buttonsBar = new HBox(backButton, createButton);
+        buttonsBar.setAlignment(Pos.CENTER);
+        buttonsBar.setSpacing(15);
+
+        VBox mainContainer = new VBox(label, inputChatName, inputUserName, inputChatPassword, buttonsBar);
         mainContainer.setAlignment(Pos.CENTER);
         mainContainer.setSpacing(10);
         mainContainer.setPrefSize(200, getHeight());

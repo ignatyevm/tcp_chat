@@ -21,6 +21,7 @@ public class InitialScene extends Scene {
         createChatButton.setOnAction(event -> CreateChatScene.show());
 
         Button joinChatButton = new Button("Join to chat");
+        joinChatButton.setOnAction(event -> JoinChatScene.show());
 
         HBox buttonsBox = new HBox(createChatButton, new Label("or"), joinChatButton);
         buttonsBox.setAlignment(Pos.CENTER);

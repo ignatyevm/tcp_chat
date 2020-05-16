@@ -20,26 +20,34 @@ public class Client {
         input = new DataInputStream(socket.getInputStream());
         output = new DataOutputStream(socket.getOutputStream());
         new Thread(() -> {
-            while (true) {
+            while (!socket.isClosed()) {
                 try {
                     if (input.available() <= 0) {
                         continue;
                     }
                     int eventType = input.readInt();
-                    System.out.println("Current client: " + userName);
+                    if (eventType == -1) continue;;
+                    System.out.println("Current user: " + userName);
                     switch (eventType) {
-                        case Server.NEW_USER_EVENT: {
+                        case Server.USER_CONNECTED_EVENT: {
                             String newUserName = input.readUTF();
-                            System.out.println("New user: " + newUserName);
+                            System.out.println("Connected user: " + newUserName);
                             eventListener.onUserConnected(newUserName);
                         }
                         break;
-                        case Server.NEW_MESSAGE_EVENT: {
+                        case Server.MESSAGE_RECEIVED_EVENT: {
                             String senderName = input.readUTF();
                             String message = input.readUTF();
                             System.out.println(senderName + ": " + message);
-                            eventListener.onMessageReceive(senderName, message);
+                            eventListener.onMessageReceived(senderName, message);
                         }
+                        break;
+                        case Server.USER_DISCONNECTED_EVENT: {
+                            String newUserName = input.readUTF();
+                            System.out.println("Disconnected user: " + newUserName);
+                            eventListener.onUserDisconnected(newUserName);
+                        }
+                        break;
                     }
                     System.out.println("=========================");
                 } catch (IOException e) {
@@ -60,8 +68,22 @@ public class Client {
         output.writeUTF(message);
     }
 
+    public void disconnect() throws IOException {
+        input.close();
+        output.close();
+        socket.close();
+    }
+
+    public boolean isConnected() {
+        return !socket.isClosed();
+    }
+
     public void registerEventListener(EventListener eventListener) {
         this.eventListener = eventListener;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public static void main(String[] args) throws IOException {
@@ -73,7 +95,12 @@ public class Client {
             }
 
             @Override
-            public void onMessageReceive(String senderName, String message) {
+            public void onMessageReceived(String senderName, String message) {
+
+            }
+
+            @Override
+            public void onUserDisconnected(String userName) {
 
             }
         });

@@ -12,13 +12,24 @@ public class TcpChatMain extends Application {
 
     private static Stage stage;
 
+    public static Client client;
+
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         TcpChatMain.stage = stage;
-        stage.setTitle("TcpChat");
+        stage.setOnCloseRequest(event -> {
+            if (client != null && client.isConnected()) {
+                try {
+                    client.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        stage.setTitle("Tcp Chat");
         stage.setResizable(false);
         stage.centerOnScreen();
-        InitialScene.show();
+        ConnectChatScene.show();
     }
 
     public static void main(String[] args) throws IOException {

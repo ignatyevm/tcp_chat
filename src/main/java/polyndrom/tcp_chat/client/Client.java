@@ -1,6 +1,5 @@
 package polyndrom.tcp_chat.client;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import polyndrom.tcp_chat.server.SecuredDataInputStream;
 import polyndrom.tcp_chat.server.SecuredDataOutputStream;
 import polyndrom.tcp_chat.server.Server;
@@ -42,7 +41,6 @@ public class Client {
                 int requestId = dis.readInt();
                 if (requestId == Server.SERVER_SEND_PUBLIC_KEY) {
                     String key = dis.readUTF();
-                    System.out.println("[Client] Server key: " + key);
                     byte[] byteKey = Base64.getDecoder().decode(key);
                     X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
                     KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -53,7 +51,6 @@ public class Client {
         }
         dos.writeInt(Server.CLIENT_SEND_PUBLIC_KEY);
         String key = Base64.getEncoder().encodeToString(publicKey.getEncoded());
-        System.out.println("[Client] Send key: " + key);
         dos.writeUTF(key);
     }
 
@@ -73,7 +70,7 @@ public class Client {
                         continue;
                     }
                     int eventType = input.readInt();
-                    if (eventType == -1) continue;;
+                    if (eventType == -1) continue;
                     System.out.println("Current user: " + userName);
                     switch (eventType) {
                         case Server.USER_CONNECTED_EVENT: {
@@ -97,7 +94,7 @@ public class Client {
                         break;
                     }
                     System.out.println("=========================");
-                } catch (IOException | NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException | Base64DecodingException e) {
+                } catch (IOException | NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException e) {
                     e.printStackTrace();
                 }
             }

@@ -1,7 +1,6 @@
 package polyndrom.tcp_chat.server;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
@@ -22,8 +21,6 @@ public class Server {
 
     public static final int SERVER_SEND_PUBLIC_KEY = 5;
     public static final int CLIENT_SEND_PUBLIC_KEY = 6;
-    public static final int SERVER_RECEIVE_PUBLIC_KEY = 7;
-    public static final int CLIENT_RECEIVE_PUBLIC_KEY = 8;
 
     public static final String IP_ADDRESS = "0.0.0.0";
     public static final int PORT = 12555;
@@ -37,20 +34,24 @@ public class Server {
 
     public static void generateKeys() {
         try {
+            System.out.println("Try generate keys...");
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(512);
             KeyPair pair = keyGen.generateKeyPair();
             publicKey = pair.getPublic();
             privateKey = pair.getPrivate();
+            System.out.println("Keys generated.");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
     }
 
     public Server() throws IOException {
-        generateKeys();
         serverSocket = new ServerSocket(PORT, 10, InetAddress.getByName(IP_ADDRESS));
+        System.out.println("Server running...");
+        generateKeys();
         validateClients();
+        System.out.println("Listening client connections...");
         while (true) {
             try {
                 Socket client = serverSocket.accept();
@@ -75,7 +76,7 @@ public class Server {
                             clientHandler.close();
                             clients.remove(clientHandler.getUserName());
                             disconnectedClients.add(clientHandler);
-                            System.out.println("Disconnected: " + clientHandler.getUserName());
+                            System.out.println("[Info] Disconnected: " + clientHandler.getUserName());
                         }
                     }
                     for (ClientHandler clientHandler : clients.values()) {

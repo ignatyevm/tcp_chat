@@ -1,45 +1,50 @@
 package polyndrom.tcp_chat.client;
 
-import com.sun.org.apache.xml.internal.security.Init;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import polyndrom.tcp_chat.server.request.CreateChatRequest;
 
-public class CreateChatScene extends Scene {
+import java.io.IOException;
 
-    public CreateChatScene(Group root) {
+public class ConnectChatScene extends Scene {
+
+    public ConnectChatScene(Group root) {
         super(root, TcpChatMain.WINDOW_WIDTH, TcpChatMain.WINDOW_HEIGHT);
 
-        Label label = new Label("Create chat");
+        Label label = new Label("Connect to chat");
         label.setFont(new Font(20));
-
-        TextField inputChatName = new TextField();
-        inputChatName.setPromptText("Type chat name...");
 
         TextField inputUserName = new TextField();
         inputUserName.setPromptText("Type your name...");
 
-        TextField inputChatPassword = new TextField();
-        inputChatPassword.setPromptText("Type chat password...");
+        Button connectButton = new Button("Connect");
+        connectButton.setOnAction(event -> {
+            try {
+                TcpChatMain.client = new Client(inputUserName.getText().trim());
+                ChatScene.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                try {
+                    TcpChatMain.client = new Client(inputUserName.getText().trim());
+                    ChatScene.show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
-        Button createButton = new Button("Create");
-        Button backButton = new Button("Back");
-        backButton.setOnAction(event -> InitialScene.show());
-
-        HBox buttonsBar = new HBox(backButton, createButton);
-        buttonsBar.setAlignment(Pos.CENTER);
-        buttonsBar.setSpacing(15);
-
-        VBox mainContainer = new VBox(label, inputChatName, inputUserName, inputChatPassword, buttonsBar);
+        VBox mainContainer = new VBox(label, inputUserName, connectButton);
         mainContainer.setAlignment(Pos.CENTER);
         mainContainer.setSpacing(10);
         mainContainer.setPrefSize(200, getHeight());
@@ -54,7 +59,7 @@ public class CreateChatScene extends Scene {
 
     public static void show() {
         Group root = new Group();
-        TcpChatMain.getStage().setScene(new CreateChatScene(root));
+        TcpChatMain.getStage().setScene(new ConnectChatScene(root));
         TcpChatMain.getStage().show();
     }
 

@@ -1,7 +1,5 @@
 package polyndrom.tcp_chat.server;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -36,15 +34,12 @@ public class ClientHandler implements Runnable {
 
     public void receivePublicKeyFromClient(DataInputStream dis, DataOutputStream dos) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         dos.writeInt(Server.SERVER_SEND_PUBLIC_KEY);
-        String key1 = Base64.getEncoder().encodeToString(Server.publicKey.getEncoded());
-        System.out.println("[Server] Send key: " + key1);
-        dos.writeUTF(key1);
+        dos.writeUTF(Base64.getEncoder().encodeToString(Server.publicKey.getEncoded()));
         while (true) {
             if (dis.available() > 0) {
                 int requestId = dis.readInt();
                 if (requestId == Server.CLIENT_SEND_PUBLIC_KEY) {
                     String key = dis.readUTF();
-                    System.out.println("[Server] Client key: " + key);
                     byte[] byteKey = Base64.getDecoder().decode(key);
                     X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
                     KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -63,8 +58,6 @@ public class ClientHandler implements Runnable {
                     continue;
                 }
                 int requestType = input.readInt();
-                System.out.println(requestType);
-                System.out.println(input.available());
                 switch (requestType) {
                     case Server.USER_CONNECT_REQUEST: {
                         userName = input.readUTF();
@@ -74,7 +67,7 @@ public class ClientHandler implements Runnable {
                             clientHandler.getOutput().writeUTF(userName);
                             clientHandler.getOutput().flush();
                         }
-                        System.out.println("Connected: " + userName);
+                        System.out.println("[Info] Connected: " + userName);
                     }
                     break;
                     case Server.USER_SEND_MESSAGE_REQUEST: {
@@ -85,10 +78,10 @@ public class ClientHandler implements Runnable {
                             clientHandler.getOutput().writeUTF(userName);
                             clientHandler.getOutput().writeUTF(message);
                         }
-                        System.out.println(userName + ": " + message);
+                        System.out.println("[Info] [Message] " + userName + ": " + message);
                     }
                 }
-            } catch (IOException | NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException | Base64DecodingException e) {
+            } catch (IOException | NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException e) {
                 e.printStackTrace();
             }
         }

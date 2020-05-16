@@ -1,7 +1,5 @@
 package polyndrom.tcp_chat.server;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -31,7 +29,7 @@ public class SecuredDataInputStream {
         return input.readInt();
     }
 
-    public String readUTF() throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, Base64DecodingException {
+    public String readUTF() throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException {
         String data = input.readUTF();
         byte[] encryptedData = Base64.getDecoder().decode(data);
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");

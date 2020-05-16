@@ -14,14 +14,19 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 public class ChatScene extends Scene implements EventListener {
 
     JFXTextField inputMessage;
     JFXListView<Message> messageList;
 
-    public ChatScene(Group root) throws IOException {
+    public ChatScene(Group root) throws IOException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException {
         super(root, TcpChatMain.WINDOW_WIDTH, TcpChatMain.WINDOW_HEIGHT);
 
         getStylesheets().add("main.css");
@@ -99,14 +104,14 @@ public class ChatScene extends Scene implements EventListener {
         if (!message.isEmpty()) {
             try {
                 TcpChatMain.client.sendMessage(message);
-            } catch (IOException e) {
+            } catch (IOException | IllegalBlockSizeException | InvalidKeyException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException e) {
                 e.printStackTrace();
             }
         }
         inputMessage.clear();
     }
 
-    public static void show() throws IOException {
+    public static void show() throws IOException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         Group root = new Group();
         TcpChatMain.getStage().setScene(new ChatScene(root));
         TcpChatMain.getStage().show();

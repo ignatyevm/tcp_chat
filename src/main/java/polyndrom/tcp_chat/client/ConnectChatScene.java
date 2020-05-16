@@ -11,7 +11,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
 public class ConnectChatScene extends Scene {
 
@@ -38,16 +44,19 @@ public class ConnectChatScene extends Scene {
                     TcpChatMain.client = new Client(userName);
                     ChatScene.show();
                 }
-            } catch (IOException e) {
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
                 e.printStackTrace();
             }
         });
         setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 try {
-                    TcpChatMain.client = new Client(inputUserName.getText().trim());
-                    ChatScene.show();
-                } catch (IOException e) {
+                    String userName = inputUserName.getText().trim();
+                    if (!userName.isEmpty()) {
+                        TcpChatMain.client = new Client(userName);
+                        ChatScene.show();
+                    }
+                } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
                     e.printStackTrace();
                 }
             }

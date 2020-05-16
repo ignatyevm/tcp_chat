@@ -1,24 +1,71 @@
 package polyndrom.tcp_chat.client;
 
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import polyndrom.tcp_chat.server.SecuredDataInputStream;
+import polyndrom.tcp_chat.server.SecuredDataOutputStream;
 import polyndrom.tcp_chat.server.Server;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 public class Client {
 
     private String userName;
     private Socket socket;
-    private DataInputStream input;
-    private DataOutputStream output;
+    private SecuredDataInputStream input;
+    private SecuredDataOutputStream output;
     private EventListener eventListener;
 
-    public Client(String userName) throws IOException {
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
+    private PublicKey serverPublicKey;
+
+    public void generateKeys() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(512);
+        KeyPair pair = keyGen.generateKeyPair();
+        publicKey = pair.getPublic();
+        privateKey = pair.getPrivate();
+    }
+
+    public void receivePublicKeyFromServer(DataInputStream dis, DataOutputStream dos) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        while (true) {
+            if (dis.available() > 0) {
+                int requestId = dis.readInt();
+                if (requestId == Server.SERVER_SEND_PUBLIC_KEY) {
+                    String key = dis.readUTF();
+                    System.out.println("[Client] Server key: " + key);
+                    byte[] byteKey = Base64.getDecoder().decode(key);
+                    X509EncodedKeySpec X509publicKey = new X509EncodedKeySpec(byteKey);
+                    KeyFactory kf = KeyFactory.getInstance("RSA");
+                    serverPublicKey = kf.generatePublic(X509publicKey);
+                    break;
+                }
+            }
+        }
+        dos.writeInt(Server.CLIENT_SEND_PUBLIC_KEY);
+        String key = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+        System.out.println("[Client] Send key: " + key);
+        dos.writeUTF(key);
+    }
+
+    public Client(String userName) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         this.userName = userName;
+        generateKeys();
         socket = new Socket(InetAddress.getByName(Server.IP_ADDRESS), Server.PORT);
-        input = new DataInputStream(socket.getInputStream());
-        output = new DataOutputStream(socket.getOutputStream());
+        DataInputStream dis = new DataInputStream(socket.getInputStream());
+        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+        receivePublicKeyFromServer(dis, dos);
+        input = new SecuredDataInputStream(dis, privateKey);
+        output = new SecuredDataOutputStream(dos, serverPublicKey);
         new Thread(() -> {
             while (!socket.isClosed()) {
                 try {
@@ -50,19 +97,20 @@ public class Client {
                         break;
                     }
                     System.out.println("=========================");
-                } catch (IOException e) {
+                } catch (IOException | NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException | Base64DecodingException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
     }
 
-    public void connect() throws IOException {
+    public void connect() throws IOException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
         output.writeInt(Server.USER_CONNECT_REQUEST);
         output.writeUTF(userName);
+        output.flush();
     }
 
-    public void sendMessage(String message) throws IOException {
+    public void sendMessage(String message) throws IOException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
         output.writeInt(Server.USER_SEND_MESSAGE_REQUEST);
         output.writeUTF(userName);
         output.writeUTF(message);
@@ -85,27 +133,4 @@ public class Client {
     public String getUserName() {
         return userName;
     }
-
-    public static void main(String[] args) throws IOException {
-        Client client1 = new Client("user1");
-        client1.registerEventListener(new EventListener() {
-            @Override
-            public void onUserConnected(String userName) {
-
-            }
-
-            @Override
-            public void onMessageReceived(String senderName, String message) {
-
-            }
-
-            @Override
-            public void onUserDisconnected(String userName) {
-
-            }
-        });
-        client1.connect();
-        client1.sendMessage("hello world");
-    }
-
 }

@@ -1,7 +1,13 @@
 package polyndrom.tcp_chat.server;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.*;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,6 +20,11 @@ public class Server {
     public static final int MESSAGE_RECEIVED_EVENT = 3;
     public static final int USER_DISCONNECTED_EVENT = 4;
 
+    public static final int SERVER_SEND_PUBLIC_KEY = 5;
+    public static final int CLIENT_SEND_PUBLIC_KEY = 6;
+    public static final int SERVER_RECEIVE_PUBLIC_KEY = 7;
+    public static final int CLIENT_RECEIVE_PUBLIC_KEY = 8;
+
     public static final String IP_ADDRESS = "0.0.0.0";
     public static final int PORT = 12555;
 
@@ -21,7 +32,23 @@ public class Server {
 
     private ServerSocket serverSocket;
 
+    public static PublicKey publicKey;
+    public static PrivateKey privateKey;
+
+    public static void generateKeys() {
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(512);
+            KeyPair pair = keyGen.generateKeyPair();
+            publicKey = pair.getPublic();
+            privateKey = pair.getPrivate();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
     public Server() throws IOException {
+        generateKeys();
         serverSocket = new ServerSocket(PORT, 10, InetAddress.getByName(IP_ADDRESS));
         validateClients();
         while (true) {
@@ -30,7 +57,7 @@ public class Server {
                 ClientHandler clientHandler = new ClientHandler(client);
                 Thread thread = new Thread(clientHandler);
                 thread.start();
-            } catch (IOException e) {
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 e.printStackTrace();
             }
         }
@@ -57,7 +84,7 @@ public class Server {
                             clientHandler.getOutput().writeUTF(disconnectedClient.getUserName());
                         }
                     }
-                } catch (IOException e) {
+                } catch (IOException | NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException e) {
                     e.printStackTrace();
                 }
                 try {

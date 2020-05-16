@@ -5,7 +5,9 @@ import com.jfoenix.controls.JFXTextField;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -38,27 +40,11 @@ public class ConnectChatScene extends Scene {
         connectButton.setMaxWidth(200);
         connectButton.setMinWidth(200);
         connectButton.setOnAction(event -> {
-            try {
-                String userName = inputUserName.getText().trim();
-                if (!userName.isEmpty()) {
-                    TcpChatMain.client = new Client(userName);
-                    ChatScene.show();
-                }
-            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
-                e.printStackTrace();
-            }
+            tryConnect(inputUserName.getText().trim());
         });
         setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
-                try {
-                    String userName = inputUserName.getText().trim();
-                    if (!userName.isEmpty()) {
-                        TcpChatMain.client = new Client(userName);
-                        ChatScene.show();
-                    }
-                } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
-                    e.printStackTrace();
-                }
+                tryConnect(inputUserName.getText().trim());
             }
         });
 
@@ -73,6 +59,20 @@ public class ConnectChatScene extends Scene {
         borderPane.setPrefSize(getWidth(), getHeight());
 
         root.getChildren().addAll(borderPane);
+    }
+
+    public void tryConnect(String userName) {
+        try {
+            if (!userName.isEmpty()) {
+                TcpChatMain.client = new Client(userName);
+                ChatScene.show();
+            }
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException | InvalidKeyException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage());
+            alert.setHeaderText("Unknown error");
+            alert.show();
+            e.printStackTrace();
+        }
     }
 
     public static void show() {

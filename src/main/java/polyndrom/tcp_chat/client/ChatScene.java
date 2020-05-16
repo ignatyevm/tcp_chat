@@ -72,10 +72,8 @@ public class ChatScene extends Scene implements EventListener {
                 super.updateItem(item, empty);
                 if (empty) return;
                 if (item.type == Message.Type.NOTIFICATION) {
-                    System.out.println("pidor");
                     pseudoClassStateChanged(PseudoClass.getPseudoClass("notification"), true);
                 } else {
-                    System.out.println("lox");
                     pseudoClassStateChanged(PseudoClass.getPseudoClass("notification"), false);
                 }
                 setText(item.text);

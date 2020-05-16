@@ -1,11 +1,11 @@
 package polyndrom.tcp_chat.client;
 
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXTextField;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -18,17 +18,26 @@ public class ConnectChatScene extends Scene {
     public ConnectChatScene(Group root) {
         super(root, TcpChatMain.WINDOW_WIDTH, TcpChatMain.WINDOW_HEIGHT);
 
+        getStylesheets().add("main.css");
+
         Label label = new Label("Connect to chat");
         label.setFont(new Font(20));
 
-        TextField inputUserName = new TextField();
+        JFXTextField inputUserName = new JFXTextField();
         inputUserName.setPromptText("Type your name...");
 
-        Button connectButton = new Button("Connect");
+        JFXButton connectButton = new JFXButton("Connect");
+        connectButton.getStyleClass().add("primary-button");
+        connectButton.setPrefWidth(200);
+        connectButton.setMaxWidth(200);
+        connectButton.setMinWidth(200);
         connectButton.setOnAction(event -> {
             try {
-                TcpChatMain.client = new Client(inputUserName.getText().trim());
-                ChatScene.show();
+                String userName = inputUserName.getText().trim();
+                if (!userName.isEmpty()) {
+                    TcpChatMain.client = new Client(userName);
+                    ChatScene.show();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

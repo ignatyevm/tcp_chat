@@ -1,60 +1,81 @@
 package polyndrom.tcp_chat.client;
 
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXListView;
+import com.jfoenix.controls.JFXTextField;
 import javafx.application.Platform;
+import javafx.css.PseudoClass;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 
 import java.io.IOException;
 
 public class ChatScene extends Scene implements EventListener {
 
-    TextField inputMessage;
-    ListView<Label> messageList;
+    JFXTextField inputMessage;
+    JFXListView<Message> messageList;
 
     public ChatScene(Group root) throws IOException {
         super(root, TcpChatMain.WINDOW_WIDTH, TcpChatMain.WINDOW_HEIGHT);
+
+        getStylesheets().add("main.css");
 
         setupScene(root);
 
         TcpChatMain.client.registerEventListener(this);
         TcpChatMain.client.connect();
-        for (int i = 0; i < 100; i++) {
-            // TcpChatMain.client.sendMessage("hello");
-        }
     }
 
     private void setupScene(Group root) {
-        inputMessage = new TextField();
+        inputMessage = new JFXTextField();
         inputMessage.setPromptText("Type message...");
-        inputMessage.setPrefSize(440, 35);
-        inputMessage.setMaxSize(440, 35);
-        inputMessage.setMinSize(440, 35);
+        inputMessage.setPrefSize(405, 30);
+        inputMessage.setMaxSize(405, 30);
+        inputMessage.setMinSize(405, 30);
+        Platform.runLater(() -> inputMessage.requestFocus());
 
-        Button sendMessageButton = new Button();
+        JFXButton sendMessageButton = new JFXButton();
         ImageView sendMessageIcon = new ImageView(getClass().getClassLoader().getResource("send.png").toString());
-        sendMessageIcon.setFitWidth(30);
-        sendMessageIcon.setFitHeight(30);
+        sendMessageIcon.setFitWidth(25);
+        sendMessageIcon.setFitHeight(20);
         sendMessageButton.setGraphic(sendMessageIcon);
-        sendMessageButton.setPrefSize(60, 35);
-        sendMessageButton.setMaxSize(60, 35);
-        sendMessageButton.setMinSize(60, 35);
+        sendMessageButton.setPrefSize(50, 28);
+        sendMessageButton.setMaxSize(50, 28);
+        sendMessageButton.setMinSize(50, 28);
+        sendMessageButton.setPadding(new Insets(1, 0, 1, 0));
+        sendMessageButton.getStyleClass().add("primary-button");
 
         HBox bottomBar = new HBox(inputMessage, sendMessageButton);
+        bottomBar.setSpacing(15);
+        bottomBar.setPadding(new Insets(10, 15, 10, 15));
+        bottomBar.setAlignment(Pos.CENTER);
+        bottomBar.getStyleClass().add("top-border");
 
-        messageList = new ListView();
-        messageList.setPrefSize(getWidth(), getHeight() - 35);
-        messageList.setMaxSize(getWidth(), getHeight() - 35);
-        messageList.setMinSize(getWidth(), getHeight() - 35);
+        messageList = new JFXListView();
+        messageList.setPrefSize(getWidth(), getHeight() - 50);
+        messageList.setMaxSize(getWidth(), getHeight() - 50);
+        messageList.setMinSize(getWidth(), getHeight() - 50);
+        messageList.setCellFactory(list -> new ListCell<Message>() {
+            @Override
+            protected void updateItem(Message item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) return;
+                if (item.type == Message.Type.NOTIFICATION) {
+                    System.out.println("pidor");
+                    pseudoClassStateChanged(PseudoClass.getPseudoClass("notification"), true);
+                } else {
+                    System.out.println("lox");
+                    pseudoClassStateChanged(PseudoClass.getPseudoClass("notification"), false);
+                }
+                setText(item.text);
+            }
+        });
 
         setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -74,7 +95,7 @@ public class ChatScene extends Scene implements EventListener {
     }
 
     void trySendMessage() {
-        String message = inputMessage.getText();
+        String message = inputMessage.getText().trim();
         if (!message.isEmpty()) {
             try {
                 TcpChatMain.client.sendMessage(message);
@@ -85,56 +106,49 @@ public class ChatScene extends Scene implements EventListener {
         inputMessage.clear();
     }
 
-    private Label createMessageLabel(String text) {
-        Label label = new Label(text);
-        label.setPrefWidth(getWidth());
-        label.setMaxWidth(getWidth());
-        label.setMinWidth(getWidth());
-        label.setTextFill(Color.BLACK);
-        label.setFont(new Font(14));
-        return label;
-    }
-
-    private Label createNotificationLabel(String text) {
-        Label label = new Label(text);
-        label.setPrefWidth(getWidth());
-        label.setMaxWidth(getWidth());
-        label.setMinWidth(getWidth());
-        label.setAlignment(Pos.CENTER);
-        label.setTextFill(Color.RED);
-        label.setFont(new Font(14));
-        return label;
-    }
-
     public static void show() throws IOException {
         Group root = new Group();
         TcpChatMain.getStage().setScene(new ChatScene(root));
         TcpChatMain.getStage().show();
     }
 
-    public void putLabel(Label label) {
+    public void addNodeToList(Message.Type type, String message) {
         Platform.runLater(() -> {
-            messageList.getItems().add(label);
+            messageList.getItems().add(new Message(type, message));
             messageList.scrollTo(messageList.getItems().size() - 1);
         });
     }
 
+    public void addMessageToList(String message) {
+        addNodeToList(Message.Type.MESSAGE, message);
+    }
+
+    public void addNotificationToList(String message) {
+        addNodeToList(Message.Type.NOTIFICATION, message);
+    }
+
     @Override
     public void onUserConnected(String userName) {
-        putLabel(createNotificationLabel(String.format("%s connected!", userName)));
+        addNotificationToList(String.format("%s connected!", userName));
     }
 
     @Override
     public void onMessageReceived(String senderName, String message) {
-        Label label = createMessageLabel(String.format("%s: %s", senderName, message));
-        if (TcpChatMain.client.getUserName().equals(senderName)) {
-            label.setBackground(new Background(new BackgroundFill(Color.BEIGE, null, null)));
-        }
-        putLabel(label);
+        addMessageToList(String.format("%s: %s", senderName, message));
     }
 
     @Override
     public void onUserDisconnected(String userName) {
-        putLabel(createNotificationLabel(String.format("%s disconnected!", userName)));
+        addNotificationToList(String.format("%s disconnected!", userName));
+    }
+
+    static class Message {
+        enum Type { MESSAGE, NOTIFICATION }
+        Type type;
+        String text;
+        public Message(Type type, String text) {
+            this.type = type;
+            this.text = text;
+        }
     }
 }

@@ -1,0 +1,43 @@
+* {
+    -fx-primary-color: #c0392b;
+    -fx-secondary-color: #ecf0f1;
+    -fx-bg-color: white;
+}
+
+.primary-button {
+    -fx-background-color: -fx-primary-color;
+    -fx-text-fill: white;
+}
+
+.jfx-text-field
+{
+    -jfx-focus-color: -fx-primary-color;
+    -jfx-unfocus-color: -fx-primary-color;
+    -fx-text-fill: black;
+    -fx-font-size: 14;
+    -fx-prompt-text-fill: -fx-primary-color;
+}
+
+.list-view {
+    -fx-background-color: -fx-bg-color;
+    -fx-padding: 0px;
+}
+
+.list-view .list-cell {
+    -fx-background-color: -fx-bg-color;
+    -fx-font-size: 14;
+    -fx-text-fill: black;
+}
+
+.list-view .list-cell:notification {
+    -fx-font-size: 15;
+    -fx-background-color: -fx-secondary-color;
+    -fx-text-fill: -fx-primary-color;
+    -fx-alignment: center;
+}
+
+.top-border {
+    -fx-border-width: 2 0 0 0;
+    -fx-border-style: solid;
+    -fx-border-color: -fx-primary-color;
+}
